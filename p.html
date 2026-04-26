@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Monitor</title>
+    
+    <link rel="stylesheet" href="p.css">
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-wind"></i> Air Quality Monitor</h1>
+        <p>Real-time and historical data powered by THSSAQ</p>
+        <button id="dark-mode-toggle"><i class="fas fa-moon"></i> Dark Mode</button>
+    </header>
+    
+    <!-- Front Page Hero Section -->
+    <section id="hero">
+        <div class="hero-content">
+            <h2>Breathe Easy with Real-Time Air Quality Insights</h2>
+            <p>Our smart robot detects air pollutants inside your home and sends real-time data to our website for easy monitoring and analysis. Stay informed and healthy.</p>
+            <button id="monitor-btn" class="cta-btn"><i class="fas fa-play"></i> Monitor Now</button>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section id="features">
+        <h2>Why Choose Our Monitor?</h2>
+        <div class="feature-grid">
+            <div class="feature">
+                <i class="fas fa-chart-line"></i>
+                <h3>Real-Time Data</h3>
+                <p>Get live air quality readings for major pollutants like PM2.5 and AQI.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-map-marked-alt"></i>
+                <h3>Interactive Maps</h3>
+                <p>Visualize sensor locations and AQI levels on an easy-to-use map.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>Historical Trends</h3>
+                <p>Analyze past data with charts to spot patterns and improvements.</p>
+            </div>
+            <div class="feature">
+                <i class="fas fa-cogs"></i>
+                <h3>Customizable</h3>
+                <p>Filter by pollutant, date range, and export data for your needs.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Monitoring Section -->
+    <main id="monitoring">
+        <div class="controls">
+            
+            <button id="geolocate-btn"><i class="fas fa-map-marker-alt"></i> Use My Location</button>
+            <button id="export-btn"><i class="fas fa-download"></i> Export Data</button>
+        </div>
+        <div class="filters">
+            <label for="pollutant-select">Filter Pollutant:</label>
+            <select id="pollutant-select">
+                <option value="all">All</option>
+                <option value="pm25">PM2.5</option>
+                <option value="pm10">AQI</option>
+                <option value="no2">FLAMMABLE GAS</option>
+                <option value="o3">TEMPERATURE</option>
+                <option value="so2">HUMIDITY</option>
+                
+            </select>
+            <label for="date-from">From:</label>
+            <input type="date" id="date-from">
+            <label for="date-to">To:</label>
+            <input type="date" id="date-to">
+            <button id="fetch-historical-btn"><i class="fas fa-calendar"></i> Fetch Historical</button>
+        </div>
+        <details class="settings">
+            <summary><i class="fas fa-cog"></i> Settings</summary>
+            <div>
+                <label for="unit-select">Units:</label>
+                <select id="unit-select">
+                    <option value="µg/m³">µg/m³</option>
+                    <option value="ppm">ppm</option>
+                </select>
+                <label for="refresh-interval">Auto-refresh (min):</label>
+                <input type="number" id="refresh-interval" min="1" max="60" value="10">
+                <button id="apply-settings-btn">Apply</button>
+            </div>
+        </details>
+        <div id="aqi-summary" class="hidden">
+            <h2 id="location-name">Loading...</h2>
+            <div id="aqi-display"></div>
+            <p id="health-advice"></p>
+        </div>
+        
+        <div id="pollutants-tab" class="tab-content">
+            <div id="air-quality-data">
+                <p>Loading air quality data...</p>
+            </div>
+        </div>
+        <div id="map-tab" class="tab-content hidden">
+            <div id="map" style="height: 400px;"></div>
+        </div>
+        <div id="trends-tab" class="tab-content hidden">
+            <canvas id="trends-chart"></canvas>
+        </div>
+    </main>
+    
+    <footer>
+        <p>Data sourced from <a href="https://openaq.org/" target="_blank">THSSAQ</a>. 
+        <a href="#">Pvt.Ltd</a> | <a href="#">Contact Us</a></p>
+        <p>&copy; 2025 Air Quality Monitor. Built with HTML, CSS, JS.</p>
+    </footer>
+    
+    <script src="p.js"></script>
+</body>
+</html>
