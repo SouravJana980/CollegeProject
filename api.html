@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirQ | API Data</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <i data-lucide="wind"></i>
+            AirQ
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="device.html">Device</a>
+            <a href="api.html" class="active">API</a>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <!-- ════ GENERIC SEGMENT (WeatherAPI) ════ -->
+        <div class="segment-header">
+            <div class="segment-badge badge-generic">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-api);display:inline-block;box-shadow:0 0 8px var(--accent-api-glow);"></span>
+                Generic
+            </div>
+            <span class="segment-source">Source: WeatherAPI.com · Kolkata · Auto-refresh 10s</span>
+            <div class="segment-line"></div>
+        </div>
+        <div class="stats-grid" style="margin-bottom:2rem;">
+            <div class="card api-source">
+                <div class="card-header">Temperature <i data-lucide="thermometer"></i></div>
+                <div class="card-value" id="api-temp">--<span class="unit">°C</span></div>
+            </div>
+            <div class="card api-source">
+                <div class="card-header">Humidity <i data-lucide="droplets"></i></div>
+                <div class="card-value" id="api-hum">--<span class="unit">%</span></div>
+            </div>
+            <div class="card api-source">
+                <div class="card-header">AQI (US-EPA) <i data-lucide="gauge"></i></div>
+                <div class="card-value" id="api-aqi">--<span class="unit">AQI</span></div>
+            </div>
+            <div class="card api-source">
+                <div class="card-header">PM2.5 <i data-lucide="wind"></i></div>
+                <div class="card-value" id="api-pm">--<span class="unit">µg/m³</span></div>
+            </div>
+            <div class="card api-source">
+                <div class="card-header">CO <i data-lucide="alert-triangle"></i></div>
+                <div class="card-value" id="api-co">--<span class="unit">ppm</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { fetchWeather } from './weather.js';
+        
+        const updateAPI = (data) => {
+            document.getElementById("api-temp").innerHTML = `${data.temp}<span class="unit">°C</span>`;
+            document.getElementById("api-hum").innerHTML  = `${data.hum}<span class="unit">%</span>`;
+            document.getElementById("api-aqi").innerHTML  = `${data.aqi}<span class="unit">AQI</span>`;
+            document.getElementById("api-pm").innerHTML   = `${data.pm25}<span class="unit">µg/m³</span>`;
+            document.getElementById("api-co").innerHTML   = `${data.co}<span class="unit">ppm</span>`;
+        };
+
+        // Listen to weather updates
+        window.addEventListener('weather-updated', (e) => updateAPI(e.detail));
+
+        // Immediately show data if already fetched
+        if (window.weatherData) {
+            updateAPI(window.weatherData);
+        }
+        
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

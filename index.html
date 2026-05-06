@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirQ | Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Charts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <i data-lucide="wind"></i>
+            AirQ
+        </a>
+        <div class="nav-links">
+            <a href="index.html" class="active">Dashboard</a>
+            <a href="device.html">Device</a>
+            <a href="api.html">API</a>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="main-grid">
+            <!-- CHARTS -->
+            <div class="chart-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h3 id="chart-title">PM2.5 Real-time Comparison</h3>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">
+                        <span style="color: var(--accent-esp)">●</span> ESP32 (Realtime)
+                        <span style="margin-left: 10px; color: var(--accent-api)">●</span> WeatherAPI (Generic)
+                    </div>
+                </div>
+                <div style="height: 400px;">
+                    <canvas id="pmChart"></canvas>
+                </div>
+            </div>
+
+            <!-- SIDEBAR: INSIGHTS & COMPARISON -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div class="card" style="width: 100%; border-left: none;">
+                    <h3>Data Sync</h3>
+                    <div class="comparison-table-container">
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>DEVICE</th>
+                                    <th>Generic</th>
+                                    <th>Diff</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-metric="temp" class="metric-row">
+                                    <td>Temperature</td>
+                                    <td id="table-temp-esp">--</td>
+                                    <td id="table-temp-api">--</td>
+                                    <td><span id="diff-temp" class="diff-tag">--</span></td>
+                                </tr>
+                                <tr data-metric="hum" class="metric-row">
+                                    <td>Humidity</td>
+                                    <td id="table-hum-esp">--</td>
+                                    <td id="table-hum-api">--</td>
+                                    <td><span id="diff-hum" class="diff-tag">--</span></td>
+                                </tr>
+                                <tr data-metric="pm25" class="metric-row active-row">
+                                    <td>PM2.5</td>
+                                    <td id="table-pm-esp">--</td>
+                                    <td id="table-pm-api">--</td>
+                                    <td><span id="diff-pm" class="diff-tag">--</span></td>
+                                </tr>
+                                <tr data-metric="aqi" class="metric-row">
+                                    <td>AQI</td>
+                                    <td id="table-aqi-esp">--</td>
+                                    <td id="table-aqi-api">--</td>
+                                    <td><span id="diff-aqi" class="diff-tag">--</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase and Weather Logic -->
+    <script type="module" src="firebase.js"></script>
+    <script type="module">
+        import { fetchWeather } from './weather.js';
+        
+        // 📊 CHART INITIALIZATION
+        const ctx = document.getElementById('pmChart').getContext('2d');
+        const gradientEsp = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientEsp.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
+        gradientEsp.addColorStop(1, 'rgba(6, 182, 212, 0.05)');
+
+        const gradientApi = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientApi.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
+        gradientApi.addColorStop(1, 'rgba(245, 158, 11, 0.05)');
+
+        const createDataset = (label, color, isApi, hidden) => ({
+            label: label,
+            data: [],
+            borderColor: color,
+            backgroundColor: isApi ? gradientApi : gradientEsp,
+            borderWidth: isApi ? 2 : 3,
+            borderDash: isApi ? [6, 6] : [],
+            fill: true,
+            tension: 0.5,
+            pointRadius: 0,
+            pointHoverRadius: isApi ? 6 : 8,
+            pointHoverBackgroundColor: '#030712',
+            pointHoverBorderColor: color,
+            pointHoverBorderWidth: 2,
+            hidden: hidden
+        });
+
+        const datasetsMap = {
+            'temp': { title: 'Temperature Real-time Comparison', esp: 0, api: 1 },
+            'hum':  { title: 'Humidity Real-time Comparison', esp: 2, api: 3 },
+            'pm25': { title: 'PM2.5 Real-time Comparison', esp: 4, api: 5 },
+            'aqi':  { title: 'AQI Real-time Comparison', esp: 6, api: 7 }
+        };
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    createDataset('ESP32 Temp', '#06b6d4', false, true),
+                    createDataset('API Temp', '#f59e0b', true, true),
+                    createDataset('ESP32 Humidity', '#06b6d4', false, true),
+                    createDataset('API Humidity', '#f59e0b', true, true),
+                    createDataset('ESP32 PM2.5', '#06b6d4', false, false),
+                    createDataset('API PM2.5', '#f59e0b', true, false),
+                    createDataset('ESP32 AQI', '#06b6d4', false, true),
+                    createDataset('API AQI', '#f59e0b', true, true)
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(3, 7, 18, 0.8)',
+                        titleColor: '#9ca3af',
+                        bodyColor: '#f9fafb',
+                        borderColor: 'rgba(255, 255, 255, 0.1)',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        titleFont: { size: 13, family: "'Inter', sans-serif" },
+                        bodyFont: { size: 14, family: "'Outfit', sans-serif", weight: 'bold' },
+                        filter: function(tooltipItem) {
+                            return !tooltipItem.dataset.hidden;
+                        }
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#6b7280', font: { family: "'Inter', sans-serif" } } },
+                    y: { 
+                        grid: { color: 'rgba(255, 255, 255, 0.05)', borderDash: [4, 4] }, 
+                        ticks: { color: '#6b7280', font: { family: "'Inter', sans-serif" } },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // ROW CLICK INTERACTIVITY
+        document.querySelectorAll('.metric-row').forEach(row => {
+            row.addEventListener('click', function() {
+                // Update active class
+                document.querySelectorAll('.metric-row').forEach(r => r.classList.remove('active-row'));
+                this.classList.add('active-row');
+
+                const metric = this.getAttribute('data-metric');
+                
+                // Hide all datasets
+                chart.data.datasets.forEach(ds => ds.hidden = true);
+                
+                // Show target datasets
+                const targetIdx = datasetsMap[metric];
+                chart.data.datasets[targetIdx.esp].hidden = false;
+                chart.data.datasets[targetIdx.api].hidden = false;
+                
+                // Update title
+                document.getElementById('chart-title').innerText = targetIdx.title;
+                
+                chart.update();
+            });
+        });
+
+        // RECALCULATE DIFFS HELPER
+        function updateDiffs() {
+            const espTemp = parseFloat(document.getElementById("table-temp-esp").innerText) || 0;
+            const espHum  = parseFloat(document.getElementById("table-hum-esp").innerText)  || 0;
+            const espPm   = parseFloat(document.getElementById("table-pm-esp").innerText)   || 0;
+            const espAqi  = parseFloat(document.getElementById("table-aqi-esp").innerText)  || 0;
+
+            const apiTemp = parseFloat(document.getElementById("table-temp-api").innerText) || 0;
+            const apiHum  = parseFloat(document.getElementById("table-hum-api").innerText)  || 0;
+            const apiPm   = parseFloat(document.getElementById("table-pm-api").innerText)   || 0;
+            const apiAqi  = parseFloat(document.getElementById("table-aqi-api").innerText)  || 0;
+
+            const tempDiff = (espTemp - apiTemp).toFixed(1);
+            const humDiff  = (espHum  - apiHum).toFixed(1);
+            const pmDiff   = (espPm   - apiPm).toFixed(1);
+            const aqiDiff  = (espAqi  - apiAqi).toFixed(0);
+
+            const updateDiff = (elId, diff) => {
+                const el = document.getElementById(elId);
+                el.innerText = (diff > 0 ? "+" : "") + diff;
+                el.className = `diff-tag ${diff > 0 ? 'diff-plus' : 'diff-minus'}`;
+            };
+
+            updateDiff("diff-temp", tempDiff);
+            updateDiff("diff-hum", humDiff);
+            updateDiff("diff-pm", pmDiff);
+            updateDiff("diff-aqi", aqiDiff);
+        }
+
+        // Helper to push data to chart
+        function pushToChartData(idx, val) {
+            chart.data.datasets[idx].data.push(val);
+            if (chart.data.datasets[idx].data.length > 15) {
+                chart.data.datasets[idx].data.shift();
+            }
+        }
+
+        // Handle Weather updates
+        window.addEventListener('weather-updated', (e) => {
+            const data = e.detail;
+            document.getElementById("table-temp-api").innerText = data.temp + " °C";
+            document.getElementById("table-hum-api").innerText  = data.hum + "%";
+            document.getElementById("table-pm-api").innerText   = data.pm25;
+            document.getElementById("table-aqi-api").innerText  = data.aqi;
+
+            // Push API line to chart
+            const lastIdx = chart.data.datasets[datasetsMap.pm25.api].data.length - 1;
+            if (lastIdx >= 0) {
+                chart.data.datasets[datasetsMap.temp.api].data[lastIdx] = data.temp;
+                chart.data.datasets[datasetsMap.hum.api].data[lastIdx] = data.hum;
+                chart.data.datasets[datasetsMap.pm25.api].data[lastIdx] = data.pm25;
+                chart.data.datasets[datasetsMap.aqi.api].data[lastIdx] = data.aqi;
+                chart.update('none');
+            }
+
+            updateDiffs();
+        });
+
+        // Handle Firebase updates
+        window.addEventListener('firebase-updated', (e) => {
+            const d = e.detail;
+            document.getElementById("table-temp-esp").innerText = (d.temp ?? '--') + " °C";
+            document.getElementById("table-hum-esp").innerText  = (d.hum ?? '--') + "%";
+            document.getElementById("table-pm-esp").innerText   = d.pm25 ?? '--';
+            document.getElementById("table-aqi-esp").innerText  = d.aqi ?? '--';
+
+            // Push Realtime (ESP32) line to main chart
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (d.pm25 !== undefined) {
+                chart.data.labels.push(now);
+                if (chart.data.labels.length > 15) chart.data.labels.shift();
+
+                pushToChartData(datasetsMap.temp.esp, d.temp);
+                pushToChartData(datasetsMap.hum.esp, d.hum);
+                pushToChartData(datasetsMap.pm25.esp, d.pm25);
+                pushToChartData(datasetsMap.aqi.esp, d.aqi);
+                
+                // Align API dataset length
+                const apiData = window.weatherData || { temp: 0, hum: 0, pm25: 0, aqi: 0 };
+                
+                // Keep API datasets in sync with the labels length
+                const syncApiData = (idx, val) => {
+                    chart.data.datasets[idx].data.push(val);
+                    if (chart.data.datasets[idx].data.length > 15) {
+                        chart.data.datasets[idx].data.shift();
+                    }
+                };
+
+                syncApiData(datasetsMap.temp.api, apiData.temp);
+                syncApiData(datasetsMap.hum.api, apiData.hum);
+                syncApiData(datasetsMap.pm25.api, apiData.pm25);
+                syncApiData(datasetsMap.aqi.api, apiData.aqi);
+
+                chart.update('none');
+            }
+
+            updateDiffs();
+        });
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

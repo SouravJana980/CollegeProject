@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirQ | Device Data</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Charts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <i data-lucide="wind"></i>
+            AirQ
+        </a>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="device.html" class="active">Device</a>
+            <a href="api.html">API</a>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <!-- ════ REALTIME SEGMENT (Firebase / ESP32) ════ -->
+        <div class="segment-header">
+            <div class="segment-badge badge-realtime">
+                <span class="live-dot"></span>
+                Realtime
+            </div>
+            <span class="segment-source">Source: Firebase Realtime DB / ESP32</span>
+            <div class="segment-line"></div>
+        </div>
+        <div class="stats-grid" style="margin-bottom:2.5rem;">
+            <div class="card">
+                <div class="card-header">Temperature <i data-lucide="thermometer"></i></div>
+                <div class="card-value" id="temp">--<span class="unit">°C</span></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Humidity <i data-lucide="droplets"></i></div>
+                <div class="card-value" id="hum">--<span class="unit">%</span></div>
+            </div>
+            <div class="card">
+                <div class="card-header">AQI (MQ135) <i data-lucide="gauge"></i></div>
+                <div class="card-value" id="aqi-esp">--<span class="unit">AQI</span></div>
+            </div>
+            <div class="card">
+                <div class="card-header">PM2.5 <i data-lucide="wind"></i></div>
+                <div class="card-value" id="pm-esp">--<span class="unit">µg/m³</span></div>
+            </div>
+            <div class="card">
+                <div class="card-header">CO (MQ7) <i data-lucide="alert-triangle"></i></div>
+                <div class="card-value" id="co-esp">--<span class="unit">ppm</span></div>
+            </div>
+            <div class="card">
+                <div class="card-header">Gas Leak (MQ2) <i data-lucide="flame"></i></div>
+                <div class="card-value" id="mq2-esp">--<span class="unit">ppm</span></div>
+            </div>
+        </div>
+
+        <!-- INDIVIDUAL SENSOR CHARTS -->
+        <div class="charts-section-title"><i data-lucide="activity"></i> Individual Sensor Trends</div>
+        <div class="mini-charts-grid">
+            <div class="mini-chart-card">
+                <div class="mini-chart-header">
+                    <span class="mini-chart-label">🌡 Temperature</span>
+                    <span class="mini-chart-value" id="mc-temp" style="color:#f87171;">--°C</span>
+                </div>
+                <div class="mini-chart-canvas-wrap"><canvas id="chart-temp"></canvas></div>
+            </div>
+            <div class="mini-chart-card">
+                <div class="mini-chart-header">
+                    <span class="mini-chart-label">💧 Humidity</span>
+                    <span class="mini-chart-value" id="mc-hum" style="color:#60a5fa;">--%</span>
+                </div>
+                <div class="mini-chart-canvas-wrap"><canvas id="chart-hum"></canvas></div>
+            </div>
+            <div class="mini-chart-card">
+                <div class="mini-chart-header">
+                    <span class="mini-chart-label">📊 AQI (MQ135)</span>
+                    <span class="mini-chart-value" id="mc-aqi" style="color:#a78bfa;">-- AQI</span>
+                </div>
+                <div class="mini-chart-canvas-wrap"><canvas id="chart-aqi"></canvas></div>
+            </div>
+            <div class="mini-chart-card">
+                <div class="mini-chart-header">
+                    <span class="mini-chart-label">🌫 PM2.5</span>
+                    <span class="mini-chart-value" id="mc-pm" style="color:#22d3ee;">-- µg/m³</span>
+                </div>
+                <div class="mini-chart-canvas-wrap"><canvas id="chart-pm"></canvas></div>
+            </div>
+            <div class="mini-chart-card">
+                <div class="mini-chart-header">
+                    <span class="mini-chart-label">⚠️ CO (MQ7)</span>
+                    <span class="mini-chart-value" id="mc-co" style="color:#fb923c;">-- ppm</span>
+                </div>
+                <div class="mini-chart-canvas-wrap"><canvas id="chart-co"></canvas></div>
+            </div>
+            <div class="mini-chart-card">
+                <div class="mini-chart-header">
+                    <span class="mini-chart-label">🔥 Gas Leak (MQ2)</span>
+                    <span class="mini-chart-value" id="mc-mq2" style="color:#f59e0b;">-- ppm</span>
+                </div>
+                <div class="mini-chart-canvas-wrap"><canvas id="chart-mq2"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Script & Logic -->
+    <script type="module" src="firebase.js"></script>
+    <script>
+        // 🔬 MINI CHARTS SETUP
+        function makeMiniChart(canvasId, color) {
+            const c = document.getElementById(canvasId).getContext('2d');
+            const grad = c.createLinearGradient(0, 0, 0, 90);
+            grad.addColorStop(0, color.replace(')', ', 0.35)').replace('rgb', 'rgba'));
+            grad.addColorStop(1, color.replace(')', ', 0.02)').replace('rgb', 'rgba'));
+            return new Chart(c, {
+                type: 'line',
+                data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: grad, borderWidth: 2.5, fill: true, tension: 0.5, pointRadius: 0 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 400, easing: 'easeOutQuart' },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false, beginAtZero: false }
+                    }
+                }
+            });
+        }
+
+        const miniCharts = {
+            temp: makeMiniChart('chart-temp', '#f87171'),
+            hum:  makeMiniChart('chart-hum',  '#60a5fa'),
+            aqi:  makeMiniChart('chart-aqi',  '#a78bfa'),
+            pm:   makeMiniChart('chart-pm',   '#22d3ee'),
+            co:   makeMiniChart('chart-co',   '#fb923c'),
+            mq2:  makeMiniChart('chart-mq2',  '#f59e0b'),
+        };
+
+        function pushMini(c, value, max = 20) {
+            c.data.labels.push('');
+            c.data.datasets[0].data.push(value);
+            if (c.data.labels.length > max) {
+                c.data.labels.shift();
+                c.data.datasets[0].data.shift();
+            }
+            c.update('none');
+        }
+
+        const updateFirebase = (d) => {
+            /* 🔥 Visual pulse on Realtime cards */
+            ['temp','hum','aqi-esp','pm-esp','co-esp','mq2-esp'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 500); }
+            });
+
+            /* ✅ UPDATE UI */
+            document.getElementById("temp").innerHTML = `${d.temp ?? '--'}<span class="unit">°C</span>`;
+            document.getElementById("hum").innerHTML = `${d.hum ?? '--'}<span class="unit">%</span>`;
+            document.getElementById("aqi-esp").innerHTML = `${d.aqi ?? '--'}<span class="unit">AQI</span>`;
+            document.getElementById("pm-esp").innerHTML = `${d.pm25 ?? '--'}<span class="unit">µg/m³</span>`;
+            document.getElementById("co-esp").innerHTML = `${d.co ?? '--'}<span class="unit">ppm</span>`;
+            document.getElementById("mq2-esp").innerHTML = `${d.mq2 ?? '--'}<span class="unit">ppm</span>`;
+
+            /* MINI CARDS */
+            document.getElementById('mc-temp').innerText = `${d.temp ?? '--'}°C`;
+            document.getElementById('mc-hum').innerText  = `${d.hum ?? '--'}%`;
+            document.getElementById('mc-aqi').innerText  = `${d.aqi ?? '--'} AQI`;
+            document.getElementById('mc-pm').innerText   = `${d.pm25 ?? '--'} µg/m³`;
+            document.getElementById('mc-co').innerText   = `${d.co ?? '--'} ppm`;
+            document.getElementById('mc-mq2').innerText  = `${d.mq2 ?? '--'} ppm`;
+
+            /* 📊 Update Realtime mini sparklines */
+            pushMini(miniCharts.temp, d.temp ?? 0);
+            pushMini(miniCharts.hum,  d.hum ?? 0);
+            pushMini(miniCharts.aqi,  d.aqi ?? 0);
+            pushMini(miniCharts.pm,   d.pm25 ?? 0);
+            pushMini(miniCharts.co,   d.co ?? 0);
+            pushMini(miniCharts.mq2,  d.mq2 ?? 0);
+        };
+
+        window.addEventListener('firebase-updated', (e) => updateFirebase(e.detail));
+
+        if (window.firebaseData) {
+            updateFirebase(window.firebaseData);
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
