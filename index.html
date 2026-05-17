@@ -22,10 +22,14 @@
             <i data-lucide="wind"></i>
             AirQ
         </a>
-        <div class="nav-links">
-            <a href="index.html" class="active">Dashboard</a>
-            <a href="device.html">Device</a>
-            <a href="api.html">API</a>
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="nav-links">
+                <a href="index.html" class="active"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Dashboard</a>
+                <a href="device.html"><i data-lucide="cpu" style="width:16px;height:16px;"></i> Device</a>
+                <a href="api.html"><i data-lucide="cloud" style="width:16px;height:16px;"></i> Generic</a>
+                <a href="data.html"><i data-lucide="database" style="width:16px;height:16px;"></i> Data Hub</a>
+            </div>
+            <a href="eco.html" class="eco-nav-btn"><i data-lucide="leaf" style="width:14px;height:14px;"></i> Smart Eco AC</a>
         </div>
     </nav>
 
@@ -35,9 +39,11 @@
             <div class="chart-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                     <h3 id="chart-title">PM2.5 Real-time Comparison</h3>
-                    <div style="font-size: 0.8rem; color: var(--text-dim);">
-                        <span style="color: var(--accent-esp)">●</span> ESP32 (Realtime)
-                        <span style="margin-left: 10px; color: var(--accent-api)">●</span> WeatherAPI (Generic)
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                        <div style="font-size: 0.8rem; color: var(--text-dim);">
+                            <span style="color: var(--accent-esp)">●</span> DEVICE (Realtime)
+                            <span style="margin-left: 10px; color: var(--accent-api)">●</span> WeatherAPI (Generic)
+                        </div>
                     </div>
                 </div>
                 <div style="height: 400px;">
@@ -46,7 +52,38 @@
             </div>
 
             <!-- SIDEBAR: INSIGHTS & COMPARISON -->
-            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- SMART INSIGHTS TIMELINE -->
+                <div class="card card-info" style="width: 100%;">
+                    <h3 style="margin-bottom: 16px; display:flex; align-items:center; gap:8px;"><i data-lucide="clock" style="width:18px;"></i> Smart Insights</h3>
+                    <div style="display: flex; flex-direction: column; gap: 16px; position: relative;" id="insights-timeline">
+                        <!-- Timeline Line -->
+                        <div style="position: absolute; left: 6px; top: 8px; bottom: 8px; width: 2px; background: rgba(255,255,255,0.1);"></div>
+                        
+                        <div style="display: flex; gap: 16px; position: relative; z-index: 1;">
+                            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); margin-top: 4px;"></div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 2px;" class="timeline-time">Just now</div>
+                                <div style="font-size: 14px; color: var(--text-main);">Eco optimization activated</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 16px; position: relative; z-index: 1;">
+                            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--warning); box-shadow: 0 0 10px var(--warning); margin-top: 4px;"></div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 2px;">10 mins ago</div>
+                                <div style="font-size: 14px; color: var(--text-main);">Humidity slightly increased</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 16px; position: relative; z-index: 1;">
+                            <div style="width: 14px; height: 14px; border-radius: 50%; background: var(--accent-esp); box-shadow: 0 0 10px var(--accent-esp); margin-top: 4px;"></div>
+                            <div>
+                                <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 2px;">30 mins ago</div>
+                                <div style="font-size: 14px; color: var(--text-main);">Air quality stabilized</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card" style="width: 100%; border-left: none;">
                     <h3>Data Sync</h3>
                     <div class="comparison-table-container">
@@ -97,15 +134,19 @@
     <script type="module">
         import { fetchWeather } from './weather.js';
         
+        // CSV Export Data Buffer (Cross-tab)
+        let sessionData = JSON.parse(localStorage.getItem('airq_data_buffer')) || [];
+        let lastSaveTime = 0;
+
         // 📊 CHART INITIALIZATION
         const ctx = document.getElementById('pmChart').getContext('2d');
         const gradientEsp = ctx.createLinearGradient(0, 0, 0, 400);
-        gradientEsp.addColorStop(0, 'rgba(6, 182, 212, 0.4)');
-        gradientEsp.addColorStop(1, 'rgba(6, 182, 212, 0.05)');
+        gradientEsp.addColorStop(0, 'rgba(0, 209, 255, 0.5)');
+        gradientEsp.addColorStop(1, 'rgba(0, 209, 255, 0.05)');
 
         const gradientApi = ctx.createLinearGradient(0, 0, 0, 400);
-        gradientApi.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
-        gradientApi.addColorStop(1, 'rgba(245, 158, 11, 0.05)');
+        gradientApi.addColorStop(0, 'rgba(255, 176, 32, 0.4)');
+        gradientApi.addColorStop(1, 'rgba(255, 176, 32, 0.05)');
 
         const createDataset = (label, color, isApi, hidden) => ({
             label: label,
@@ -115,7 +156,7 @@
             borderWidth: isApi ? 2 : 3,
             borderDash: isApi ? [6, 6] : [],
             fill: true,
-            tension: 0.5,
+            tension: 0.4,
             pointRadius: 0,
             pointHoverRadius: isApi ? 6 : 8,
             pointHoverBackgroundColor: '#030712',
@@ -136,14 +177,14 @@
             data: {
                 labels: [],
                 datasets: [
-                    createDataset('ESP32 Temp', '#06b6d4', false, true),
-                    createDataset('API Temp', '#f59e0b', true, true),
-                    createDataset('ESP32 Humidity', '#06b6d4', false, true),
-                    createDataset('API Humidity', '#f59e0b', true, true),
-                    createDataset('ESP32 PM2.5', '#06b6d4', false, false),
-                    createDataset('API PM2.5', '#f59e0b', true, false),
-                    createDataset('ESP32 AQI', '#06b6d4', false, true),
-                    createDataset('API AQI', '#f59e0b', true, true)
+                    createDataset('DEVICE Temp', '#00D1FF', false, true),
+                    createDataset('API Temp', '#FFB020', true, true),
+                    createDataset('DEVICE Humidity', '#00D1FF', false, true),
+                    createDataset('API Humidity', '#FFB020', true, true),
+                    createDataset('DEVICE PM2.5', '#00D1FF', false, false),
+                    createDataset('API PM2.5', '#FFB020', true, false),
+                    createDataset('DEVICE AQI', '#00D1FF', false, true),
+                    createDataset('API AQI', '#FFB020', true, true)
                 ]
             },
             options: {
@@ -243,13 +284,49 @@
             }
         }
 
+        function getParamColor(param, val) {
+            if (val === undefined || val === null || val === '--') return '';
+            const v = parseFloat(val);
+            if (param === 'aqi') {
+                if (v <= 50) return '#10b981';
+                if (v <= 100) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'pm') {
+                if (v <= 12) return '#10b981';
+                if (v <= 35) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'co') {
+                if (v <= 9) return '#10b981';
+                if (v <= 35) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'temp') {
+                if (v >= 20 && v <= 30) return '#10b981';
+                if (v > 30 && v <= 37) return '#f59e0b';
+                if (v < 20) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'hum') {
+                if (v >= 30 && v <= 60) return '#10b981';
+                if (v > 60 && v <= 75) return '#f59e0b';
+                return '#ef4444';
+            }
+            return '';
+        }
+
         // Handle Weather updates
         window.addEventListener('weather-updated', (e) => {
             const data = e.detail;
             document.getElementById("table-temp-api").innerText = data.temp + " °C";
+            document.getElementById("table-temp-api").style.color = getParamColor("temp", data.temp);
             document.getElementById("table-hum-api").innerText  = data.hum + "%";
+            document.getElementById("table-hum-api").style.color = getParamColor("hum", data.hum);
             document.getElementById("table-pm-api").innerText   = data.pm25;
+            document.getElementById("table-pm-api").style.color = getParamColor("pm", data.pm25);
             document.getElementById("table-aqi-api").innerText  = data.aqi;
+            document.getElementById("table-aqi-api").style.color = getParamColor("aqi", data.aqi);
 
             // Push API line to chart
             const lastIdx = chart.data.datasets[datasetsMap.pm25.api].data.length - 1;
@@ -268,11 +345,15 @@
         window.addEventListener('firebase-updated', (e) => {
             const d = e.detail;
             document.getElementById("table-temp-esp").innerText = (d.temp ?? '--') + " °C";
+            document.getElementById("table-temp-esp").style.color = getParamColor("temp", d.temp);
             document.getElementById("table-hum-esp").innerText  = (d.hum ?? '--') + "%";
+            document.getElementById("table-hum-esp").style.color = getParamColor("hum", d.hum);
             document.getElementById("table-pm-esp").innerText   = d.pm25 ?? '--';
+            document.getElementById("table-pm-esp").style.color = getParamColor("pm", d.pm25);
             document.getElementById("table-aqi-esp").innerText  = d.aqi ?? '--';
+            document.getElementById("table-aqi-esp").style.color = getParamColor("aqi", d.aqi);
 
-            // Push Realtime (ESP32) line to main chart
+            // Push Realtime (DEVICE) line to main chart
             const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             if (d.pm25 !== undefined) {
                 chart.data.labels.push(now);
@@ -303,6 +384,29 @@
             }
 
             updateDiffs();
+
+            // Push to sessionData and manage localStorage buffer
+            sessionData.push({
+                timestamp: new Date().toISOString(),
+                temp: d.temp,
+                hum: d.hum,
+                aqi: d.aqi,
+                pm: d.pm25,
+                co: d.co,
+                mq2: d.mq2
+            });
+
+            // Keep buffer limit (e.g., 5000 records)
+            if (sessionData.length > 5000) {
+                sessionData.shift();
+            }
+
+            // Save to localStorage every 5 seconds to reduce write frequency
+            const nowTime = Date.now();
+            if (nowTime - lastSaveTime > 5000) {
+                localStorage.setItem('airq_data_buffer', JSON.stringify(sessionData));
+                lastSaveTime = nowTime;
+            }
         });
 
         lucide.createIcons();
