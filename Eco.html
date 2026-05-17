@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirQ | Smart Eco AC</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Charts -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .eco-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-card);
+            color: var(--text-main);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-family: var(--font-sans);
+            outline: none;
+            transition: all 0.3s;
+        }
+        .eco-input:focus {
+            border-color: var(--success);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+        .eco-input option {
+            background: var(--bg-base);
+        }
+        .eco-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        .eco-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--success);
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        .eco-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        
+        .text-sm { font-size: 0.85rem; }
+        .text-xl { font-size: 1.5rem; }
+        .text-2xl { font-size: 2.25rem; }
+        .font-bold { font-weight: 700; font-family: var(--font-display); }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-danger { color: var(--danger); }
+        
+        .mini-stat {
+            background: rgba(255,255,255,0.02);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        .eco-card-highlight {
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.05), 0 8px 32px -8px rgba(0,0,0,0.5) !important;
+        }
+        .eco-card-highlight::before {
+            background: var(--success) !important;
+            box-shadow: 0 0 15px var(--success) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">
+            <i data-lucide="wind"></i>
+            AirQ
+        </a>
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="nav-links">
+                <a href="index.html"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Dashboard</a>
+                <a href="device.html"><i data-lucide="cpu" style="width:16px;height:16px;"></i> Device</a>
+                <a href="api.html"><i data-lucide="cloud" style="width:16px;height:16px;"></i> Generic</a>
+                <a href="data.html"><i data-lucide="database" style="width:16px;height:16px;"></i> Data Hub</a>
+            </div>
+            <a href="eco.html" class="eco-nav-btn active"><i data-lucide="leaf" style="width:14px;height:14px;"></i> Smart Eco AC</a>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <!-- ════ HEADER SEGMENT ════ -->
+        <div class="segment-header">
+            <div class="segment-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--success); box-shadow: inset 0 0 0 1px rgba(16,185,129,0.3);">
+                <i data-lucide="leaf" style="width:14px;height:14px;margin-right:4px;"></i>
+                Eco Advisor
+            </div>
+            <span class="segment-source">Smart Sustainable Cooling Optimization</span>
+            <div class="segment-line"></div>
+        </div>
+
+        <div class="main-grid">
+            <!-- LEFT COLUMN -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- Live Sensors -->
+                <div class="card">
+                    <h3 style="display:flex; align-items:center; gap:0.5rem; font-size:1.2rem;"><i data-lucide="activity"></i> Live Environment</h3>
+                    <div class="stats-grid" style="margin-top: 1rem; margin-bottom: 0; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+                        <div class="mini-stat">
+                            <div class="text-sm" style="color:var(--text-muted)">Temperature</div>
+                            <div class="text-xl font-bold" id="eco-temp">--<span class="unit">°C</span></div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="text-sm" style="color:var(--text-muted)">Humidity</div>
+                            <div class="text-xl font-bold" id="eco-hum">--<span class="unit">%</span></div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="text-sm" style="color:var(--text-muted)">AQI</div>
+                            <div class="text-xl font-bold" id="eco-aqi">--</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="text-sm" style="color:var(--text-muted)">PM2.5</div>
+                            <div class="text-xl font-bold" id="eco-pm25">--</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="text-sm" style="color:var(--text-muted)">PM10</div>
+                            <div class="text-xl font-bold" id="eco-pm10">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input settings -->
+                <div class="card">
+                    <h3 style="display:flex; align-items:center; gap:0.5rem; font-size:1.2rem;"><i data-lucide="sliders"></i> AC Settings</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-top:1.5rem;">
+                        <div style="grid-column: 1 / -1;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                                <label style="color:var(--text-dim); font-size:0.9rem;">Daily Usage Hours</label>
+                                <span class="font-bold" style="color:var(--accent-esp);"><span id="hours-val">10</span> hrs</span>
+                            </div>
+                            <input type="range" id="ac-hours" min="1" max="24" value="10" class="eco-slider">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                                <label style="color:var(--text-dim); font-size:0.9rem;">Electricity Unit Cost (₹/kWh)</label>
+                                <span class="font-bold" style="color:var(--accent-esp);">₹<span id="cost-val">10.0</span></span>
+                            </div>
+                            <input type="range" id="unit-cost" min="1" max="20" step="0.5" value="10" class="eco-slider">
+                        </div>
+                        <div>
+                            <label style="color:var(--text-dim); font-size:0.9rem; display:block; margin-bottom:0.5rem;">AC Capacity</label>
+                            <select id="ac-cap" class="eco-input">
+                                <option value="1.0">1 Ton (1.0 kW)</option>
+                                <option value="1.5" selected>1.5 Ton (1.5 kW)</option>
+                                <option value="2.0">2 Ton (2.0 kW)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="color:var(--text-dim); font-size:0.9rem; display:block; margin-bottom:0.5rem;">AC Type</label>
+                            <select id="ac-type" class="eco-input">
+                                <option value="split">Split</option>
+                                <option value="window">Window</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendation Output -->
+                <div class="card eco-card-highlight">
+                    <h3 style="color: var(--success); display:flex; align-items:center; gap:0.5rem; font-size:1.2rem; margin-bottom:1.5rem;">
+                        <i data-lucide="cpu"></i> AI Cooling Recommendation
+                    </h3>
+                    <div style="display:flex; flex-direction:column; gap:1.2rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:baseline; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:1rem; margin-bottom: 1rem;">
+                            <span style="color:var(--text-dim); display:flex; align-items:center; gap:8px;">Recommended AC Temp <span class="live-dot"></span></span>
+                            <span id="rec-temp" class="text-2xl font-bold" style="color: var(--success); text-shadow: 0 0 20px rgba(16,185,129,0.4);">--°C</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                            <div class="mini-stat" style="text-align:center; position:relative; overflow:hidden;">
+                                <div style="color:var(--text-dim); font-size:0.8rem; margin-bottom:0.5rem;">Eco Efficiency Score</div>
+                                <div id="rec-esave" class="text-xl font-bold text-success">--/100</div>
+                                <div style="position:absolute; bottom:0; left:0; right:0; height:2px; background:var(--success); box-shadow:0 0 10px var(--success);"></div>
+                            </div>
+                            <div class="mini-stat" style="text-align:center;">
+                                <div style="color:var(--text-dim); font-size:0.8rem; margin-bottom:0.5rem;">Monthly Savings</div>
+                                <div id="rec-msave" class="text-xl font-bold" style="color:var(--warning);">₹--</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); padding:1rem; border-radius:0.75rem; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                                <span style="font-size:0.8rem; color:var(--text-muted);">CO₂ Saved This Month</span>
+                                <span class="font-bold" style="color:var(--accent-esp);">38 kg</span>
+                            </div>
+                            <div style="width:1px; height:30px; background:rgba(255,255,255,0.1);"></div>
+                            <div style="display:flex; flex-direction:column; gap:0.2rem; text-align:right;">
+                                <span style="font-size:0.8rem; color:var(--text-muted);">Energy Reduced</span>
+                                <span class="font-bold text-success">142 kWh</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                
+                <!-- Tips -->
+                <div class="card" style="background: linear-gradient(145deg, rgba(16, 185, 129, 0.1) 0%, rgba(3, 7, 18, 0) 100%); border-color: rgba(16, 185, 129, 0.2);">
+                    <h3 style="color: var(--success); font-size:1.1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i data-lucide="lightbulb"></i> Sustainability Tips
+                    </h3>
+                    <ul id="eco-tips" style="margin-top: 1rem; padding-left: 1.5rem; color: var(--text-main); display:flex; flex-direction:column; gap:0.8rem; line-height:1.5;">
+                        <li style="color:var(--text-dim);">Waiting for sensor data...</li>
+                    </ul>
+                </div>
+
+                <!-- Charts -->
+                <div class="card hover-lift">
+                    <div class="card-header">Cooling Efficiency vs Outdoor Heat</div>
+                    <div style="height:220px; position:relative;"><canvas id="chart-temp-ac"></canvas></div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="card hover-lift">
+                        <div class="card-header" style="font-size:0.75rem;">Savings Trajectory</div>
+                        <div style="height:140px; position:relative;"><canvas id="chart-savings"></canvas></div>
+                    </div>
+                    <div class="card hover-lift">
+                        <div class="card-header" style="font-size:0.75rem;">Humidity Impact on Power</div>
+                        <div style="height:140px; position:relative;"><canvas id="chart-aqi-power"></canvas></div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="firebase.js"></script>
+    <script>
+        lucide.createIcons();
+
+        // DOM Elements
+        const elHours = document.getElementById('ac-hours');
+        const elHoursVal = document.getElementById('hours-val');
+        const elCost = document.getElementById('unit-cost');
+        const elCostVal = document.getElementById('cost-val');
+        const elCap = document.getElementById('ac-cap');
+        
+        // Output Elements
+        const outTemp = document.getElementById('rec-temp');
+        const outESave = document.getElementById('rec-esave');
+        const outMSave = document.getElementById('rec-msave');
+        const outComfort = document.getElementById('rec-comfort');
+        const outEco = document.getElementById('rec-eco');
+        const tipsContainer = document.getElementById('eco-tips');
+
+        // Current Environmental State
+        let currentEnv = {
+            temp: 30,
+            hum: 50,
+            aqi: 50,
+            pm25: 15,
+            pm10: 20
+        };
+
+        // Charts
+        Chart.defaults.color = '#9ca3af';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        const ctxTempAC = document.getElementById('chart-temp-ac').getContext('2d');
+        const chartTempAC = new Chart(ctxTempAC, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Room Temp (°C)',
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        data: [],
+                        tension: 0.4,
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Recommended AC (°C)',
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        data: [],
+                        tension: 0.4,
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 12, font: {size: 10} } } },
+                scales: { x: { display: false }, y: { beginAtZero: false, grid: { color: 'rgba(255,255,255,0.05)' } } }
+            }
+        });
+
+        const ctxSavings = document.getElementById('chart-savings').getContext('2d');
+        const chartSavings = new Chart(ctxSavings, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Savings (₹)',
+                    backgroundColor: '#06b6d4',
+                    borderRadius: 4,
+                    data: [1200, 1400, 1100, 1600, 1500, 1512]
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { display: false }, ticks: { font: {size: 9} } }, y: { display: false } }
+            }
+        });
+
+        const ctxAqiPower = document.getElementById('chart-aqi-power').getContext('2d');
+        const chartAqiPower = new Chart(ctxAqiPower, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'AQI Level',
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    data: [],
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
+
+        // Safe param color helper
+        function getParamColor(param, val) {
+            if (val === undefined || val === null || val === '--') return '';
+            const v = parseFloat(val);
+            if (param === 'aqi') {
+                if (v <= 50) return '#10b981';
+                if (v <= 100) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'pm') {
+                if (v <= 12) return '#10b981';
+                if (v <= 35) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'temp') {
+                if (v >= 20 && v <= 30) return '#10b981';
+                if (v > 30 && v <= 37) return '#f59e0b';
+                if (v < 20) return '#f59e0b';
+                return '#ef4444';
+            }
+            if (param === 'hum') {
+                if (v >= 30 && v <= 60) return '#10b981';
+                if (v > 60 && v <= 75) return '#f59e0b';
+                return '#ef4444';
+            }
+            return '';
+        }
+
+        // Calculation Logic
+        function updateEcoCalculations() {
+            const H = currentEnv.hum || 50;
+            const AQI = currentEnv.aqi || 50;
+            const roomTemp = currentEnv.temp || 30;
+            
+            const Hr = parseFloat(elHours.value);
+            const W = parseFloat(elCap.value);
+            const unitCost = parseFloat(elCost.value);
+
+            // Safety guards for formula to prevent Infinity
+            const safeH = (H === 50) ? 50.1 : H;
+            const safeAQI = (AQI === 50) ? 50.1 : AQI;
+
+            // Tac = 26 + (10 / (H - 50)) - (100 / (AQI - 50))
+            let Tac = 26 + (10 / (safeH - 50)) - (100 / (safeAQI - 50));
+            
+            // Constrain
+            if (Tac < 24) Tac = 24;
+            if (Tac > 28) Tac = 28;
+            
+            // Format to 1 decimal
+            Tac = parseFloat(Tac.toFixed(1));
+
+            // Psave = (Tac - 20) * 6
+            let Psave = (Tac - 20) * 6;
+            if (Psave < 0) Psave = 0;
+            Psave = parseFloat(Psave.toFixed(1));
+
+            // Msave = (Psave / 100) * (W * Hr * 30 * unitCost)
+            let Msave = (Psave / 100) * (W * Hr * 30 * unitCost);
+            Msave = Math.round(Msave);
+
+            // Update UI
+            outTemp.innerText = `${Tac}°C`;
+            // Fake an Eco Efficiency score based on Psave mapping to 100
+            let ecoScore = 50 + (Psave * 1.5);
+            if(ecoScore > 100) ecoScore = 100;
+            outESave.innerText = `${Math.round(ecoScore)}/100`;
+            outMSave.innerText = `₹${Msave}`;
+
+            // Generate Tips
+            let tipsHTML = '';
+            tipsHTML += `<li><strong style="color:var(--text-main)">Standard:</strong> Keep AC at ${Tac}°C for best balance of comfort and energy.</li>`;
+            
+            if (H > 70) {
+                tipsHTML += `<li><strong style="color:var(--warning)">High Humidity Detected:</strong> Use a ceiling fan to save 36% more power instead of lowering the AC below 24°C.</li>`;
+            }
+            if (AQI > 200) {
+                tipsHTML += `<li><strong style="color:var(--danger)">Poor Air Quality:</strong> Avoid outdoor ventilation. Ensure AC filters are clean to reduce PM circulation.</li>`;
+            }
+            if (Hr > 12) {
+                tipsHTML += `<li><strong style="color:var(--accent-esp)">Long Usage:</strong> Consider using the AC's sleep timer to gradually increase temperature at night.</li>`;
+            }
+
+            tipsContainer.innerHTML = tipsHTML;
+
+            // Push to live charts
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            chartTempAC.data.labels.push(now);
+            chartTempAC.data.datasets[0].data.push(roomTemp);
+            chartTempAC.data.datasets[1].data.push(Tac);
+            if (chartTempAC.data.labels.length > 20) {
+                chartTempAC.data.labels.shift();
+                chartTempAC.data.datasets[0].data.shift();
+                chartTempAC.data.datasets[1].data.shift();
+            }
+            chartTempAC.update('none');
+
+            chartAqiPower.data.labels.push(now);
+            chartAqiPower.data.datasets[0].data.push(AQI);
+            if (chartAqiPower.data.labels.length > 20) {
+                chartAqiPower.data.labels.shift();
+                chartAqiPower.data.datasets[0].data.shift();
+            }
+            // Add latest saving to bar chart dynamically (just for visual fx)
+            chartSavings.data.datasets[0].data[5] = Msave;
+            chartSavings.update('none');
+            chartAqiPower.update('none');
+        }
+
+        // Event Listeners
+        elHours.addEventListener('input', (e) => {
+            elHoursVal.innerText = e.target.value;
+            updateEcoCalculations();
+        });
+        elCost.addEventListener('input', (e) => {
+            elCostVal.innerText = parseFloat(e.target.value).toFixed(1);
+            updateEcoCalculations();
+        });
+        elCap.addEventListener('change', updateEcoCalculations);
+
+        window.addEventListener('firebase-updated', (e) => {
+            const d = e.detail;
+            currentEnv = {
+                temp: d.temp ?? currentEnv.temp,
+                hum: d.hum ?? currentEnv.hum,
+                aqi: d.aqi ?? currentEnv.aqi,
+                pm25: d.pm25 ?? currentEnv.pm25,
+                pm10: d.pm10 ?? currentEnv.pm10 ?? '--'
+            };
+
+            // Update DOM Cards
+            document.getElementById('eco-temp').innerHTML = `${currentEnv.temp}<span class="unit">°C</span>`;
+            document.getElementById('eco-temp').style.color = getParamColor('temp', currentEnv.temp) || 'inherit';
+            
+            document.getElementById('eco-hum').innerHTML = `${currentEnv.hum}<span class="unit">%</span>`;
+            document.getElementById('eco-hum').style.color = getParamColor('hum', currentEnv.hum) || 'inherit';
+            
+            document.getElementById('eco-aqi').innerHTML = `${currentEnv.aqi}`;
+            document.getElementById('eco-aqi').style.color = getParamColor('aqi', currentEnv.aqi) || 'inherit';
+            
+            document.getElementById('eco-pm25').innerHTML = `${currentEnv.pm25}`;
+            document.getElementById('eco-pm25').style.color = getParamColor('pm', currentEnv.pm25) || 'inherit';
+            
+            document.getElementById('eco-pm10').innerHTML = `${currentEnv.pm10}`;
+
+            updateEcoCalculations();
+        });
+
+        // Init with default data
+        updateEcoCalculations();
+    </script>
+</body>
+</html>
