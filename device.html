@@ -22,94 +22,111 @@
             <i data-lucide="wind"></i>
             AirQ
         </a>
-        <div class="nav-links">
-            <a href="index.html">Dashboard</a>
-            <a href="device.html" class="active">Device</a>
-            <a href="api.html">API</a>
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="nav-links">
+                <a href="index.html"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Dashboard</a>
+                <a href="device.html" class="active"><i data-lucide="cpu" style="width:16px;height:16px;"></i> Device</a>
+                <a href="api.html"><i data-lucide="cloud" style="width:16px;height:16px;"></i> Generic</a>
+                <a href="data.html"><i data-lucide="database" style="width:16px;height:16px;"></i> Data Hub</a>
+            </div>
+            <a href="eco.html" class="eco-nav-btn"><i data-lucide="leaf" style="width:14px;height:14px;"></i> Smart Eco AC</a>
         </div>
     </nav>
 
     <div class="dashboard">
-        <!-- ════ REALTIME SEGMENT (Firebase / ESP32) ════ -->
+        <!-- ════ REALTIME SEGMENT (Firebase / DEVICE) ════ -->
         <div class="segment-header">
             <div class="segment-badge badge-realtime">
                 <span class="live-dot"></span>
                 Realtime
             </div>
-            <span class="segment-source">Source: Firebase Realtime DB / ESP32</span>
-            <div class="segment-line"></div>
+            <span class="segment-source">Source: Firebase Realtime DB / DEVICE</span>
+            
+            <div class="segment-line" style="flex:1;"></div>
         </div>
-        <div class="stats-grid" style="margin-bottom:2.5rem;">
-            <div class="card">
-                <div class="card-header">Temperature <i data-lucide="thermometer"></i></div>
-                <div class="card-value" id="temp">--<span class="unit">°C</span></div>
-            </div>
-            <div class="card">
-                <div class="card-header">Humidity <i data-lucide="droplets"></i></div>
-                <div class="card-value" id="hum">--<span class="unit">%</span></div>
-            </div>
-            <div class="card">
-                <div class="card-header">AQI (MQ135) <i data-lucide="gauge"></i></div>
-                <div class="card-value" id="aqi-esp">--<span class="unit">AQI</span></div>
-            </div>
-            <div class="card">
-                <div class="card-header">PM2.5 <i data-lucide="wind"></i></div>
-                <div class="card-value" id="pm-esp">--<span class="unit">µg/m³</span></div>
-            </div>
-            <div class="card">
-                <div class="card-header">CO (MQ7) <i data-lucide="alert-triangle"></i></div>
-                <div class="card-value" id="co-esp">--<span class="unit">ppm</span></div>
-            </div>
-            <div class="card">
-                <div class="card-header">Gas Leak (MQ2) <i data-lucide="flame"></i></div>
-                <div class="card-value" id="mq2-esp">--<span class="unit">ppm</span></div>
-            </div>
-        </div>
-
-        <!-- INDIVIDUAL SENSOR CHARTS -->
-        <div class="charts-section-title"><i data-lucide="activity"></i> Individual Sensor Trends</div>
-        <div class="mini-charts-grid">
-            <div class="mini-chart-card">
-                <div class="mini-chart-header">
-                    <span class="mini-chart-label">🌡 Temperature</span>
-                    <span class="mini-chart-value" id="mc-temp" style="color:#f87171;">--°C</span>
+        <div class="stats-grid" style="margin-bottom:2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <div class="card hover-lift" id="card-temp" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="thermometer"></i> Temperature</span>
+                    <div id="status-temp" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
                 </div>
-                <div class="mini-chart-canvas-wrap"><canvas id="chart-temp"></canvas></div>
-            </div>
-            <div class="mini-chart-card">
-                <div class="mini-chart-header">
-                    <span class="mini-chart-label">💧 Humidity</span>
-                    <span class="mini-chart-value" id="mc-hum" style="color:#60a5fa;">--%</span>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-temp">
+                    <span id="val-temp">--</span><span class="unit">°C</span>
                 </div>
-                <div class="mini-chart-canvas-wrap"><canvas id="chart-hum"></canvas></div>
-            </div>
-            <div class="mini-chart-card">
-                <div class="mini-chart-header">
-                    <span class="mini-chart-label">📊 AQI (MQ135)</span>
-                    <span class="mini-chart-value" id="mc-aqi" style="color:#a78bfa;">-- AQI</span>
+                <div class="story-text" id="story-temp" style="margin-bottom: 12px; margin-top: 4px;">Waiting for sensor data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-temp"></canvas>
                 </div>
-                <div class="mini-chart-canvas-wrap"><canvas id="chart-aqi"></canvas></div>
             </div>
-            <div class="mini-chart-card">
-                <div class="mini-chart-header">
-                    <span class="mini-chart-label">🌫 PM2.5</span>
-                    <span class="mini-chart-value" id="mc-pm" style="color:#22d3ee;">-- µg/m³</span>
+            
+            <div class="card hover-lift" id="card-hum" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="droplets"></i> Humidity</span>
+                    <div id="status-hum" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
                 </div>
-                <div class="mini-chart-canvas-wrap"><canvas id="chart-pm"></canvas></div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-hum">
+                    <span id="val-hum">--</span><span class="unit">%</span>
+                </div>
+                <div class="story-text" id="story-hum" style="margin-bottom: 12px; margin-top: 4px;">Waiting for sensor data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-hum"></canvas>
+                </div>
             </div>
-            <div class="mini-chart-card">
-                <div class="mini-chart-header">
-                    <span class="mini-chart-label">⚠️ CO (MQ7)</span>
-                    <span class="mini-chart-value" id="mc-co" style="color:#fb923c;">-- ppm</span>
+            
+            <div class="card hover-lift card-critical" id="card-aqi" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="gauge"></i> AQI (MQ135)</span>
+                    <div id="status-aqi" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
                 </div>
-                <div class="mini-chart-canvas-wrap"><canvas id="chart-co"></canvas></div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-aqi">
+                    <span id="val-aqi">--</span><span class="unit">AQI</span> <span class="live-dot" id="live-aqi" style="margin-left: 4px;"></span>
+                </div>
+                <div class="story-text" id="story-aqi" style="margin-bottom: 12px; margin-top: 4px;">Waiting for sensor data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-aqi"></canvas>
+                </div>
             </div>
-            <div class="mini-chart-card">
-                <div class="mini-chart-header">
-                    <span class="mini-chart-label">🔥 Gas Leak (MQ2)</span>
-                    <span class="mini-chart-value" id="mc-mq2" style="color:#f59e0b;">-- ppm</span>
+            
+            <div class="card hover-lift card-critical" id="card-pm" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="wind"></i> PM2.5</span>
+                    <div id="status-pm" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
                 </div>
-                <div class="mini-chart-canvas-wrap"><canvas id="chart-mq2"></canvas></div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-pm">
+                    <span id="val-pm">--</span><span class="unit">µg/m³</span> <span class="live-dot" id="live-pm" style="margin-left: 4px;"></span>
+                </div>
+                <div class="story-text" id="story-pm" style="margin-bottom: 12px; margin-top: 4px;">Waiting for sensor data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-pm"></canvas>
+                </div>
+            </div>
+            
+            <div class="card hover-lift card-warning" id="card-co" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle"></i> CO (MQ7)</span>
+                    <div id="status-co" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-co">
+                    <span id="val-co">--</span><span class="unit">ppm</span> <span class="live-dot" id="live-co" style="margin-left: 4px;"></span>
+                </div>
+                <div class="story-text" id="story-co" style="margin-bottom: 12px; margin-top: 4px;">Waiting for sensor data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-co"></canvas>
+                </div>
+            </div>
+            
+            <div class="card hover-lift" id="card-mq2" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="flame"></i> Gas Leak (MQ2)</span>
+                    <div id="status-mq2" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-mq2">
+                    <span id="val-mq2">--</span><span class="unit">ppm</span>
+                </div>
+                <div class="story-text" id="story-mq2" style="margin-bottom: 12px; margin-top: 4px;">Waiting for sensor data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-mq2"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -118,14 +135,23 @@
     <script type="module" src="firebase.js"></script>
     <script>
         // 🔬 MINI CHARTS SETUP
+        function hexToRgba(hex, alpha) {
+            // Remove hash if present
+            hex = hex.replace('#', '');
+            let r = parseInt(hex.slice(0, 2), 16) || 0,
+                g = parseInt(hex.slice(2, 4), 16) || 0,
+                b = parseInt(hex.slice(4, 6), 16) || 0;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
         function makeMiniChart(canvasId, color) {
             const c = document.getElementById(canvasId).getContext('2d');
-            const grad = c.createLinearGradient(0, 0, 0, 90);
-            grad.addColorStop(0, color.replace(')', ', 0.35)').replace('rgb', 'rgba'));
-            grad.addColorStop(1, color.replace(')', ', 0.02)').replace('rgb', 'rgba'));
+            const grad = c.createLinearGradient(0, 0, 0, 100);
+            grad.addColorStop(0, hexToRgba(color, 0.4));
+            grad.addColorStop(1, hexToRgba(color, 0.02));
             return new Chart(c, {
                 type: 'line',
-                data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: grad, borderWidth: 2.5, fill: true, tension: 0.5, pointRadius: 0 }] },
+                data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: grad, borderWidth: 3, fill: true, tension: 0.4, pointRadius: 0 }] },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     animation: { duration: 400, easing: 'easeOutQuart' },
@@ -138,13 +164,17 @@
             });
         }
 
+        // State for mini-charts and CSV export buffer
+        let sessionData = JSON.parse(localStorage.getItem('airq_data_buffer')) || [];
+        let lastSaveTime = 0;
+
         const miniCharts = {
-            temp: makeMiniChart('chart-temp', '#f87171'),
-            hum:  makeMiniChart('chart-hum',  '#60a5fa'),
-            aqi:  makeMiniChart('chart-aqi',  '#a78bfa'),
-            pm:   makeMiniChart('chart-pm',   '#22d3ee'),
-            co:   makeMiniChart('chart-co',   '#fb923c'),
-            mq2:  makeMiniChart('chart-mq2',  '#f59e0b'),
+            temp: makeMiniChart('chart-temp', '#FFB020'), // Warning Amber
+            hum:  makeMiniChart('chart-hum',  '#00D1FF'), // Cyan
+            aqi:  makeMiniChart('chart-aqi',  '#00E38C'), // Success Green
+            pm:   makeMiniChart('chart-pm',   '#00D1FF'), // Cyan
+            co:   makeMiniChart('chart-co',   '#FFB020'), // Amber
+            mq2:  makeMiniChart('chart-mq2',  '#FF4D5A'), // Danger Red
         };
 
         function pushMini(c, value, max = 20) {
@@ -157,28 +187,195 @@
             c.update('none');
         }
 
-        const updateFirebase = (d) => {
+        function updateMiniChartStyle(c, color) {
+            if (!color || !c.ctx) return;
+            if (c.data.datasets[0].borderColor !== color) {
+                c.data.datasets[0].borderColor = color;
+                const grad = c.ctx.createLinearGradient(0, 0, 0, 100);
+                grad.addColorStop(0, hexToRgba(color, 0.4));
+                grad.addColorStop(1, hexToRgba(color, 0.02));
+                c.data.datasets[0].backgroundColor = grad;
+                c.update('none');
+            }
+        }
+
+        function getParamColor(param, val) {
+            if (val === undefined || val === null || val === '--') return '';
+            const v = parseFloat(val);
+            if (param === 'aqi') {
+                if (v <= 50) return '#00E38C';
+                if (v <= 100) return '#FFB020';
+                return '#FF4D5A';
+            }
+            if (param === 'pm') {
+                if (v <= 12) return '#00E38C';
+                if (v <= 35) return '#FFB020';
+                return '#FF4D5A';
+            }
+            if (param === 'co') {
+                if (v <= 9) return '#00E38C';
+                if (v <= 35) return '#FFB020';
+                return '#FF4D5A';
+            }
+            if (param === 'temp') {
+                if (v >= 20 && v <= 30) return '#00E38C';
+                if (v > 30 && v <= 37) return '#FFB020';
+                if (v < 20) return '#00D1FF';
+                return '#FF4D5A';
+            }
+            if (param === 'hum') {
+                if (v >= 30 && v <= 60) return '#00E38C';
+                if (v > 60 && v <= 75) return '#FFB020';
+                return '#FF4D5A';
+            }
+            return '';
+        }
+
+        function getParamStatus(param, val) {
+            if (val === undefined || val === null || val === '--') return '';
+            const v = parseFloat(val);
+            if (param === 'aqi') {
+                if (v <= 50) return 'GOOD';
+                if (v <= 100) return 'MODERATE';
+                return 'HAZARDOUS';
+            }
+            if (param === 'pm') {
+                if (v <= 12) return 'GOOD';
+                if (v <= 35) return 'MODERATE';
+                return 'POOR';
+            }
+            if (param === 'co') {
+                if (v <= 9) return 'SAFE';
+                if (v <= 35) return 'MODERATE';
+                return 'DANGEROUS';
+            }
+            if (param === 'temp') {
+                if (v >= 20 && v <= 30) return 'OPTIMAL';
+                if (v > 30 && v <= 37) return 'WARM';
+                if (v < 20) return 'COOL';
+                return 'CRITICAL';
+            }
+            if (param === 'hum') {
+                if (v >= 30 && v <= 60) return 'OPTIMAL';
+                if (v > 60 && v <= 75) return 'HIGH';
+                return 'CRITICAL';
+            }
+            if (param === 'mq2') {
+                return v > 0 ? 'DANGEROUS' : 'SAFE';
+            }
+            return '';
+        }
+
+        window.addEventListener('firebase-updated', (e) => {
+            const d = e.detail;
+
             /* 🔥 Visual pulse on Realtime cards */
-            ['temp','hum','aqi-esp','pm-esp','co-esp','mq2-esp'].forEach(id => {
+            ['valwrap-temp','valwrap-hum','valwrap-aqi','valwrap-pm','valwrap-co','valwrap-mq2'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) { el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 500); }
             });
 
-            /* ✅ UPDATE UI */
-            document.getElementById("temp").innerHTML = `${d.temp ?? '--'}<span class="unit">°C</span>`;
-            document.getElementById("hum").innerHTML = `${d.hum ?? '--'}<span class="unit">%</span>`;
-            document.getElementById("aqi-esp").innerHTML = `${d.aqi ?? '--'}<span class="unit">AQI</span>`;
-            document.getElementById("pm-esp").innerHTML = `${d.pm25 ?? '--'}<span class="unit">µg/m³</span>`;
-            document.getElementById("co-esp").innerHTML = `${d.co ?? '--'}<span class="unit">ppm</span>`;
-            document.getElementById("mq2-esp").innerHTML = `${d.mq2 ?? '--'}<span class="unit">ppm</span>`;
+            /* 📖 Storytelling & Colors Helper */
+            const updateCardState = (cardId, dotId, storyId, val, thresholds, stories) => {
+                const card = document.getElementById(cardId);
+                const dot = document.getElementById(dotId);
+                const story = document.getElementById(storyId);
+                
+                if(val === undefined || val === null) return;
+                let state = 'safe'; // default
+                if(val >= thresholds.danger) state = 'danger';
+                else if(val >= thresholds.warning) state = 'warning';
+                
+                // Update Card Depth
+                if(card) {
+                    card.className = 'card hover-lift';
+                    if(state === 'danger') card.classList.add('card-critical');
+                    else if(state === 'warning') card.classList.add('card-warning');
+                }
+                
+                // Update Live Dot
+                if(dot) {
+                    dot.className = 'live-dot';
+                    if(state === 'danger') dot.classList.add('danger');
+                    else if(state === 'warning') dot.classList.add('warning');
+                }
+                
+                // Update Story
+                if(story) {
+                    if(state === 'danger') story.innerText = stories.danger;
+                    else if(state === 'warning') story.innerText = stories.warning;
+                    else story.innerText = stories.safe;
+                }
+            };
 
-            /* MINI CARDS */
-            document.getElementById('mc-temp').innerText = `${d.temp ?? '--'}°C`;
-            document.getElementById('mc-hum').innerText  = `${d.hum ?? '--'}%`;
-            document.getElementById('mc-aqi').innerText  = `${d.aqi ?? '--'} AQI`;
-            document.getElementById('mc-pm').innerText   = `${d.pm25 ?? '--'} µg/m³`;
-            document.getElementById('mc-co').innerText   = `${d.co ?? '--'} ppm`;
-            document.getElementById('mc-mq2').innerText  = `${d.mq2 ?? '--'} ppm`;
+            updateCardState('card-aqi', 'live-aqi', 'story-aqi', d.aqi, {warning: 51, danger: 101}, {
+                safe: "Air quality is excellent for ventilation.",
+                warning: "Acceptable, but consider closing windows.",
+                danger: "Unhealthy conditions. Air purifier recommended."
+            });
+
+            updateCardState('card-pm', 'live-pm', 'story-pm', d.pm25, {warning: 13, danger: 36}, {
+                safe: "Particulate matter is negligible.",
+                warning: "Moderate dust present. Keep indoors.",
+                danger: "High pollution levels detected."
+            });
+
+            updateCardState('card-co', 'live-co', 'story-co', d.co, {warning: 10, danger: 36}, {
+                safe: "Carbon Monoxide levels are safe.",
+                warning: "Slight elevation. Ensure ventilation.",
+                danger: "Critical CO levels! Evacuate."
+            });
+
+            const updateTempStory = (val) => {
+                if(val == null) return;
+                const story = document.getElementById('story-temp');
+                if(val < 20) story.innerText = "Environment is cold. Heating may be needed.";
+                else if(val <= 30) story.innerText = "Optimal indoor temperature.";
+                else story.innerText = "High heat load. AC efficiency reduced.";
+            };
+            updateTempStory(d.temp);
+
+            const updateHumStory = (val) => {
+                if(val == null) return;
+                const story = document.getElementById('story-hum');
+                if(val < 30) story.innerText = "Air is dry. Humidifier suggested.";
+                else if(val <= 60) story.innerText = "Humidity is perfectly balanced.";
+                else story.innerText = "High humidity increases cooling load.";
+            };
+            updateHumStory(d.hum);
+
+            /* ✅ UPDATE UI */
+            const updateCardUI = (id, param, val, chart, defaultColor) => {
+                const color = getParamColor(param, val) || defaultColor;
+                const status = getParamStatus(param, val);
+                
+                // Value
+                document.getElementById(`val-${id}`).innerText = val ?? '--';
+                
+                // Text Shadows & Colors
+                document.getElementById(`valwrap-${id}`).style.color = color;
+                document.getElementById(`valwrap-${id}`).style.textShadow = `0 0 15px ${hexToRgba(color, 0.3)}`;
+                
+                // Status Text
+                document.getElementById(`status-${id}`).innerText = status || '--';
+                document.getElementById(`status-${id}`).style.color = color;
+                
+                // Chart Graphic
+                updateMiniChartStyle(chart, color);
+            };
+
+            updateCardUI('temp', 'temp', d.temp, miniCharts.temp, '#FFB020');
+            updateCardUI('hum', 'hum', d.hum, miniCharts.hum, '#00D1FF');
+            updateCardUI('aqi', 'aqi', d.aqi, miniCharts.aqi, '#00E38C');
+            updateCardUI('pm', 'pm', d.pm25, miniCharts.pm, '#00D1FF');
+            updateCardUI('co', 'co', d.co, miniCharts.co, '#FFB020');
+            
+            // special case for mq2
+            let mq2Color = '#00E38C';
+            if (d.mq2 !== undefined && d.mq2 !== '--') {
+                mq2Color = d.mq2 > 0 ? '#FF4D5A' : '#00E38C';
+            }
+            updateCardUI('mq2', 'mq2', d.mq2, miniCharts.mq2, mq2Color);
 
             /* 📊 Update Realtime mini sparklines */
             pushMini(miniCharts.temp, d.temp ?? 0);
@@ -187,13 +384,30 @@
             pushMini(miniCharts.pm,   d.pm25 ?? 0);
             pushMini(miniCharts.co,   d.co ?? 0);
             pushMini(miniCharts.mq2,  d.mq2 ?? 0);
-        };
+            
+            // Push to sessionData and manage localStorage buffer
+            sessionData.push({
+                timestamp: new Date().toISOString(),
+                temp: d.temp,
+                hum: d.hum,
+                aqi: d.aqi,
+                pm: d.pm25,
+                co: d.co,
+                mq2: d.mq2
+            });
 
-        window.addEventListener('firebase-updated', (e) => updateFirebase(e.detail));
+            // Keep buffer limit (e.g., 5000 records)
+            if (sessionData.length > 5000) {
+                sessionData.shift();
+            }
 
-        if (window.firebaseData) {
-            updateFirebase(window.firebaseData);
-        }
+            // Save to localStorage every 5 seconds to reduce write frequency
+            const now = Date.now();
+            if (now - lastSaveTime > 5000) {
+                localStorage.setItem('airq_data_buffer', JSON.stringify(sessionData));
+                lastSaveTime = now;
+            }
+        });
 
         lucide.createIcons();
     </script>
