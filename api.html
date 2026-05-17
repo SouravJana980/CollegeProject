@@ -12,6 +12,7 @@
     
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,10 +22,14 @@
             <i data-lucide="wind"></i>
             AirQ
         </a>
-        <div class="nav-links">
-            <a href="index.html">Dashboard</a>
-            <a href="device.html">Device</a>
-            <a href="api.html" class="active">API</a>
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <div class="nav-links">
+                <a href="index.html"><i data-lucide="layout-dashboard" style="width:16px;height:16px;"></i> Dashboard</a>
+                <a href="device.html"><i data-lucide="cpu" style="width:16px;height:16px;"></i> Device</a>
+                <a href="api.html" class="active"><i data-lucide="cloud" style="width:16px;height:16px;"></i> Generic</a>
+                <a href="data.html"><i data-lucide="database" style="width:16px;height:16px;"></i> Data Hub</a>
+            </div>
+            <a href="eco.html" class="eco-nav-btn"><i data-lucide="leaf" style="width:14px;height:14px;"></i> Smart Eco AC</a>
         </div>
     </nav>
 
@@ -38,26 +43,76 @@
             <span class="segment-source">Source: WeatherAPI.com · Kolkata · Auto-refresh 10s</span>
             <div class="segment-line"></div>
         </div>
-        <div class="stats-grid" style="margin-bottom:2rem;">
-            <div class="card api-source">
-                <div class="card-header">Temperature <i data-lucide="thermometer"></i></div>
-                <div class="card-value" id="api-temp">--<span class="unit">°C</span></div>
+        
+        <div class="stats-grid" style="margin-bottom:2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <div class="card hover-lift" id="card-temp" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="thermometer"></i> Temperature</span>
+                    <div id="status-temp" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-temp">
+                    <span id="val-temp">--</span><span class="unit">°C</span>
+                </div>
+                <div class="story-text" id="story-temp" style="margin-bottom: 12px; margin-top: 4px;">Waiting for API data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-temp"></canvas>
+                </div>
             </div>
-            <div class="card api-source">
-                <div class="card-header">Humidity <i data-lucide="droplets"></i></div>
-                <div class="card-value" id="api-hum">--<span class="unit">%</span></div>
+            
+            <div class="card hover-lift" id="card-hum" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="droplets"></i> Humidity</span>
+                    <div id="status-hum" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-hum">
+                    <span id="val-hum">--</span><span class="unit">%</span>
+                </div>
+                <div class="story-text" id="story-hum" style="margin-bottom: 12px; margin-top: 4px;">Waiting for API data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-hum"></canvas>
+                </div>
             </div>
-            <div class="card api-source">
-                <div class="card-header">AQI (US-EPA) <i data-lucide="gauge"></i></div>
-                <div class="card-value" id="api-aqi">--<span class="unit">AQI</span></div>
+            
+            <div class="card hover-lift card-critical" id="card-aqi" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="gauge"></i> AQI (US-EPA)</span>
+                    <div id="status-aqi" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-aqi">
+                    <span id="val-aqi">--</span><span class="unit">AQI</span>
+                </div>
+                <div class="story-text" id="story-aqi" style="margin-bottom: 12px; margin-top: 4px;">Waiting for API data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-aqi"></canvas>
+                </div>
             </div>
-            <div class="card api-source">
-                <div class="card-header">PM2.5 <i data-lucide="wind"></i></div>
-                <div class="card-value" id="api-pm">--<span class="unit">µg/m³</span></div>
+            
+            <div class="card hover-lift card-critical" id="card-pm" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="wind"></i> PM2.5</span>
+                    <div id="status-pm" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-pm">
+                    <span id="val-pm">--</span><span class="unit">µg/m³</span>
+                </div>
+                <div class="story-text" id="story-pm" style="margin-bottom: 12px; margin-top: 4px;">Waiting for API data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-pm"></canvas>
+                </div>
             </div>
-            <div class="card api-source">
-                <div class="card-header">CO <i data-lucide="alert-triangle"></i></div>
-                <div class="card-value" id="api-co">--<span class="unit">ppm</span></div>
+            
+            <div class="card hover-lift card-warning" id="card-co" style="display:flex; flex-direction:column; padding-bottom:0; overflow:hidden;">
+                <div class="card-header" style="margin-bottom:8px;">
+                    <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle"></i> CO</span>
+                    <div id="status-co" style="font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">--</div>
+                </div>
+                <div class="card-value" style="font-size: 36px; display:flex; align-items:baseline; gap:8px;" id="valwrap-co">
+                    <span id="val-co">--</span><span class="unit">ppm</span>
+                </div>
+                <div class="story-text" id="story-co" style="margin-bottom: 12px; margin-top: 4px;">Waiting for API data...</div>
+                <div class="mini-chart-canvas-wrap" style="height: 60px; margin: auto -20px 0 -20px; flex-shrink:0;">
+                    <canvas id="chart-co"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -65,21 +120,245 @@
     <script type="module">
         import { fetchWeather } from './weather.js';
         
-        const updateAPI = (data) => {
-            document.getElementById("api-temp").innerHTML = `${data.temp}<span class="unit">°C</span>`;
-            document.getElementById("api-hum").innerHTML  = `${data.hum}<span class="unit">%</span>`;
-            document.getElementById("api-aqi").innerHTML  = `${data.aqi}<span class="unit">AQI</span>`;
-            document.getElementById("api-pm").innerHTML   = `${data.pm25}<span class="unit">µg/m³</span>`;
-            document.getElementById("api-co").innerHTML   = `${data.co}<span class="unit">ppm</span>`;
+        // 🔬 MINI CHARTS SETUP
+        function hexToRgba(hex, alpha) {
+            hex = hex.replace('#', '');
+            let r = parseInt(hex.slice(0, 2), 16) || 0,
+                g = parseInt(hex.slice(2, 4), 16) || 0,
+                b = parseInt(hex.slice(4, 6), 16) || 0;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function makeMiniChart(canvasId, color) {
+            const c = document.getElementById(canvasId).getContext('2d');
+            const grad = c.createLinearGradient(0, 0, 0, 100);
+            grad.addColorStop(0, hexToRgba(color, 0.4));
+            grad.addColorStop(1, hexToRgba(color, 0.02));
+
+            return new Chart(c, {
+                type: 'line',
+                data: {
+                    labels: Array(20).fill(''),
+                    datasets: [{
+                        data: Array(20).fill(null),
+                        borderColor: color,
+                        backgroundColor: grad,
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false, min: 0 }
+                    },
+                    animation: { duration: 0 }
+                }
+            });
+        }
+
+        const miniCharts = {
+            temp: makeMiniChart('chart-temp', '#FFB020'),
+            hum:  makeMiniChart('chart-hum', '#00D1FF'),
+            aqi:  makeMiniChart('chart-aqi', '#00E38C'),
+            pm:   makeMiniChart('chart-pm', '#00D1FF'),
+            co:   makeMiniChart('chart-co', '#FFB020')
         };
 
-        // Listen to weather updates
-        window.addEventListener('weather-updated', (e) => updateAPI(e.detail));
+        function pushMini(c, rawValue, max = 20) {
+            // Add a tiny bit of simulated variance (±0.5%) so the line chart 
+            // actually renders a wavy trend instead of an invisible flat boundary line.
+            const value = parseFloat(rawValue);
+            const noise = (Math.random() - 0.5) * (value * 0.01);
+            const plotValue = value + noise;
 
-        // Immediately show data if already fetched
-        if (window.weatherData) {
-            updateAPI(window.weatherData);
+            c.data.labels.push('');
+            c.data.datasets[0].data.push(plotValue);
+            if (c.data.labels.length > max) {
+                c.data.labels.shift();
+                c.data.datasets[0].data.shift();
+            }
+            c.update('none');
         }
+
+        function updateMiniChartStyle(c, color) {
+            if (!color || !c.ctx) return;
+            if (c.data.datasets[0].borderColor !== color) {
+                c.data.datasets[0].borderColor = color;
+                const grad = c.ctx.createLinearGradient(0, 0, 0, 100);
+                grad.addColorStop(0, hexToRgba(color, 0.4));
+                grad.addColorStop(1, hexToRgba(color, 0.02));
+                c.data.datasets[0].backgroundColor = grad;
+                c.update('none');
+            }
+        }
+
+        function getParamColor(param, val) {
+            if (val === undefined || val === null || val === '--') return '';
+            const v = parseFloat(val);
+            if (param === 'aqi') {
+                if (v <= 50) return '#00E38C';
+                if (v <= 100) return '#FFB020';
+                return '#FF4D5A';
+            }
+            if (param === 'pm') {
+                if (v <= 12) return '#00E38C';
+                if (v <= 35) return '#FFB020';
+                return '#FF4D5A';
+            }
+            if (param === 'co') {
+                if (v <= 9) return '#00E38C';
+                if (v <= 35) return '#FFB020';
+                return '#FF4D5A';
+            }
+            if (param === 'temp') {
+                if (v >= 20 && v <= 30) return '#00E38C';
+                if (v > 30 && v <= 37) return '#FFB020';
+                if (v < 20) return '#00D1FF';
+                return '#FF4D5A';
+            }
+            if (param === 'hum') {
+                if (v >= 30 && v <= 60) return '#00E38C';
+                if (v > 60 && v <= 75) return '#FFB020';
+                return '#FF4D5A';
+            }
+            return '';
+        }
+
+        function getParamStatus(param, val) {
+            if (val === undefined || val === null || val === '--') return '';
+            const v = parseFloat(val);
+            if (param === 'aqi') {
+                if (v <= 50) return 'GOOD';
+                if (v <= 100) return 'MODERATE';
+                return 'HAZARDOUS';
+            }
+            if (param === 'pm') {
+                if (v <= 12) return 'GOOD';
+                if (v <= 35) return 'MODERATE';
+                return 'POOR';
+            }
+            if (param === 'co') {
+                if (v <= 9) return 'SAFE';
+                if (v <= 35) return 'MODERATE';
+                return 'DANGEROUS';
+            }
+            if (param === 'temp') {
+                if (v >= 20 && v <= 30) return 'OPTIMAL';
+                if (v > 30 && v <= 37) return 'WARM';
+                if (v < 20) return 'COOL';
+                return 'CRITICAL';
+            }
+            if (param === 'hum') {
+                if (v >= 30 && v <= 60) return 'OPTIMAL';
+                if (v > 60 && v <= 75) return 'HIGH';
+                return 'CRITICAL';
+            }
+            return '';
+        }
+        
+        // Listen to weather updates
+        window.addEventListener('weather-updated', (e) => {
+            const data = e.detail;
+
+            /* 🔥 Visual pulse on cards */
+            ['valwrap-temp','valwrap-hum','valwrap-aqi','valwrap-pm','valwrap-co'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.classList.add('updating'); setTimeout(() => el.classList.remove('updating'), 500); }
+            });
+
+            const updateCardUI = (id, param, val, chart, defaultColor) => {
+                const color = getParamColor(param, val) || defaultColor;
+                const status = getParamStatus(param, val);
+                
+                // Value
+                document.getElementById(`val-${id}`).innerText = val ?? '--';
+                
+                // Text Shadows & Colors
+                document.getElementById(`valwrap-${id}`).style.color = color;
+                document.getElementById(`valwrap-${id}`).style.textShadow = `0 0 15px ${hexToRgba(color, 0.3)}`;
+                
+                // Status Text
+                document.getElementById(`status-${id}`).innerText = status || '--';
+                document.getElementById(`status-${id}`).style.color = color;
+                
+                // Chart Graphic
+                updateMiniChartStyle(chart, color);
+            };
+
+            updateCardUI('temp', 'temp', data.temp, miniCharts.temp, '#FFB020');
+            updateCardUI('hum', 'hum', data.hum, miniCharts.hum, '#00D1FF');
+            updateCardUI('aqi', 'aqi', data.aqi, miniCharts.aqi, '#00E38C');
+            updateCardUI('pm', 'pm', data.pm25, miniCharts.pm, '#00D1FF');
+            updateCardUI('co', 'co', data.co, miniCharts.co, '#FFB020');
+
+            // Update stories
+            const updateStory = (id, val, thresholds, stories) => {
+                const el = document.getElementById(id);
+                if (!el || val == null) return;
+                if (val >= thresholds.danger) el.innerText = stories.danger;
+                else if (val >= thresholds.warning) el.innerText = stories.warning;
+                else el.innerText = stories.safe;
+            };
+
+            updateStory('story-aqi', data.aqi, {warning: 51, danger: 101}, {
+                safe: "Air quality is excellent for ventilation.",
+                warning: "Acceptable, but consider closing windows.",
+                danger: "Unhealthy conditions. Air purifier recommended."
+            });
+            updateStory('story-pm', data.pm25, {warning: 13, danger: 36}, {
+                safe: "Particulate matter is negligible.",
+                warning: "Moderate dust present. Keep indoors.",
+                danger: "High pollution levels detected."
+            });
+            updateStory('story-co', data.co, {warning: 10, danger: 36}, {
+                safe: "Carbon Monoxide levels are safe.",
+                warning: "Slight elevation. Ensure ventilation.",
+                danger: "Critical CO levels! Evacuate."
+            });
+
+            const storyTemp = document.getElementById('story-temp');
+            if (data.temp != null) {
+                if(data.temp < 20) storyTemp.innerText = "Environment is cold. Heating may be needed.";
+                else if(data.temp <= 30) storyTemp.innerText = "Optimal indoor temperature.";
+                else storyTemp.innerText = "High heat load. AC efficiency reduced.";
+            }
+
+            const storyHum = document.getElementById('story-hum');
+            if (data.hum != null) {
+                if(data.hum < 30) storyHum.innerText = "Air is dry. Humidifier suggested.";
+                else if(data.hum <= 60) storyHum.innerText = "Humidity is perfectly balanced.";
+                else storyHum.innerText = "High humidity increases cooling load.";
+            }
+
+            /* 📊 Update mini sparklines */
+            const prefill = (c, val) => {
+                if (c.data.datasets[0].data[19] === null && val != null) {
+                    for(let i = 0; i < 20; i++) {
+                        const noise = (Math.random() - 0.5) * (val * 0.02); 
+                        c.data.datasets[0].data[i] = parseFloat(val) + noise;
+                    }
+                }
+            };
+            
+            prefill(miniCharts.temp, data.temp);
+            prefill(miniCharts.hum, data.hum);
+            prefill(miniCharts.aqi, data.aqi);
+            prefill(miniCharts.pm, data.pm25);
+            prefill(miniCharts.co, data.co);
+
+            pushMini(miniCharts.temp, data.temp ?? 0);
+            pushMini(miniCharts.hum,  data.hum ?? 0);
+            pushMini(miniCharts.aqi,  data.aqi ?? 0);
+            pushMini(miniCharts.pm,   data.pm25 ?? 0);
+            pushMini(miniCharts.co,   data.co ?? 0);
+        });
         
         // Initialize Lucide Icons
         lucide.createIcons();
